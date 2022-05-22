@@ -1,7 +1,7 @@
-from FuncClass import balancefunc, processfunc, sourcedata
+from Classes import balancefunc, processfunc, sourcedata
 
 
-class FuncBasic():
+class Basic():
     def __init__(self) -> None:
         self.__sta = sourcedata.StaticData()
         self.__dyn = sourcedata.DynamicData()
@@ -50,7 +50,7 @@ class FuncBasic():
         process_.GraphCollect(true_label, pred_prob)
 
 
-class FixReferTest(FuncBasic):
+class FixReferTest(Basic):
     def __init__(self):
         super().__init__()
         self.__text_info = []
@@ -61,16 +61,16 @@ class FixReferTest(FuncBasic):
         return self.__result
 
     def Dataset(self, tar_l, met_l, t_ran, smote=True):
-        self._FuncBasic__DatasetBuild(tar_l, met_l, t_ran)
+        self._Basic__DatasetBuild(tar_l, met_l, t_ran)
         if not smote:
             pass
         else:
-            os_info = self._FuncBasic__TrainBalance_SMOTE()
+            os_info = self._Basic__TrainBalance_SMOTE()
             self.__text_info.append(os_info)
 
     def Modelgen(self, param, func):
-        self.__result = self._FuncBasic__ModelDerivation(func, param)
+        self.__result = self._Basic__ModelDerivation(func, param)
         self.__text_info.append(self.DictTextGen(self.__result))
 
     def Resultsav(self, fold_n, file_n):
-        self._FuncBasic__ResultGenMain(fold_n, file_n, self.__text_info)
+        self._Basic__ResultGenMain(fold_n, file_n, self.__text_info)

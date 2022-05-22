@@ -1,16 +1,16 @@
 import pandas as pd
 from itertools import combinations
 from sklearn_model import FixReferTest
-from FuncClass.algorithm import RandomForestClassifier, xgb, SVC
-from FuncClass.algorithm import LogisiticReg, KFold, RandomForest
+from Classes.algorithm import RandomForestClassifier, xgb, SVC
+from Classes.algorithm import LogisiticReg, KFold, RandomForest
 
 
 def LogRegSingleTest():
     d_set = {
         'test_per': 0.3,
-        'save_name': 'LogReg_MPJm_max',
-        'methods_l': ['1', '4', '6', '7', '8'],
-        'targets_l': ['MPJm_t'],
+        'save_name': 'LogReg_med',
+        'methods_l': ['4'],
+        'targets_l': ['RR', 'V_T', 'VE', 'MPJL_t'],
         'log_para1': {
             'C': 1,
             'max_iter': 2000
@@ -44,7 +44,7 @@ def LogRegMultiTest():
         for mets in mets_l:
             p_m = FixReferTest()
             p_m.Dataset(d_set['targets_l'], list(mets), d_set['test_per'])
-            p_m.Modelgen(d_set['log_para1'])
+            p_m.Modelgen(d_set['log_para1'], LogisiticReg)
             key = '-'.join(mets)
             result_ = {}
             result_['func'] = key
@@ -95,5 +95,7 @@ def KFoldTest():
     p_m.Resultsav(d_set['fold_name'], d_set['file_name'])
 
 
-KFoldTest()
-# LogRegSingleTest()
+# KFoldTest()
+# # LogRegSingleTest()
+LogRegSingleTest()
+# LogRegMultiTest()
