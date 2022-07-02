@@ -1,6 +1,9 @@
+from os import mkdir
 from pathlib import Path
+from numpy import mean
+from pandas import concat
 from pandas import DataFrame
-from Classes.processing import DataSetProcess
+from Classes.processing import DataSetProcess, OutcomeGenerate
 from Classes.balancing import BalanSMOTE, BalanRandOS
 from Classes.algorithm import ParaSel_Grid, ParaSel_Rand
 
@@ -20,8 +23,8 @@ class KFoldMain(Basic):
         self.__pred_rsts = []
 
     def __GetEvalSet(self, data_set):
-        eval_set = [(data_set['X_train'], data_set['y_train']),
-                    (data_set['X_test'], data_set['y_test'])]
+        eval_set = [(data_set.X_train, data_set.y_train),
+                    (data_set.X_test, data_set.y_test)]
         return eval_set
 
     def DataSetBuild(self, data_: DataFrame, col_label: str):
@@ -87,7 +90,8 @@ class KFoldMain(Basic):
                 para_deduce = {}
                 para_deduce.update(para_deduce_add)
                 main_p.Deduce(para_deduce)
-                self.__pred_rsts.append(main_p.Predict())
+                main_p.Predict()
+                self.__pred_rsts.append(main_p.perform)
             else:
                 para_deduce = {
                     'eval_set': self.__GetEvalSet(main_p.dataset),
@@ -102,50 +106,29 @@ class KFoldMain(Basic):
                 para_deduce['eval_set'] = self.__GetEvalSet(main_p.dataset)
                 para_deduce['early_stopping_rounds'] = 50
                 main_p.Deduce(para_deduce)
-                self.__pred_rsts.append(main_p.Predict())
+                main_p.Predict()
+                self.__pred_rsts.append(main_p.perform)
 
     def ResultGenerate(self, save_path: Path):
         '''
-
         '''
-        repr_gen = lambda dict_: ('\n').join(k + ':\t' + str(v)
-                                             for k, v in dict_.items())
-
-        ave_auc = sum([fold['rocauc']
-                       for fold in self.__pred_rsts]) / self.__fold_num
-        ave_r2 = sum([fold['score']
-                      for fold in self.__pred_rsts]) / self.__fold_num
-
-        with open(save_path / 'pred_result.txt', 'w') as f:
-            for i in range(self.__fold_num):
-                fold_info = self.__pred_rsts[i]
-                fold_para = self.__para_rsts[i]
-
-                f.write('\n{0}-Fold:\n'.format(i))
-                f.write('SCORE: \t {0} \n'.format(fold_info['score']))
-                f.write('ROCAUC: \t {0} \n'.format(fold_info['rocauc']))
-                f.write('REPORT: \n {0} \n'.format(fold_info['report']))
-                f.write('PARAMS: \n {0} \n'.format(repr_gen(fold_para)))
-
-            f.write('\nAVE Performance:\n')
-            f.write('SCORE:\t{0}\n'.format(ave_r2))
-            f.write('ROCAUC:\t{0}\n'.format(ave_auc))
-
+        df_tot = []
+        save_name = 'pred_result'
+        save_path.mkdir(parents=True, mkdir=True)
         for i in range(self.__fold_num):
-            fold_info = self.__pred_rsts[i]
-            fold_data = self.__data_sets[i]
-            save_name = '{0}-Fold_ROC.png'.format(i)
-            # main_p = PlotMain(save_path)
-            # main_p.RocSinglePlot(fold_data[3], fold_info['prob'], save_name)
+            main_p = OutcomeGenerate(self.__pred_rsts[i], save_path)
+            main_p.TextGen(save_name)  # write into same file
+            main_p.RocPlot('{0}-Fold_ROC'.format(i + 1))
+            df_fold = main_p.TableGen()
+            df_fold['mode'] = 'fold_' + str(i + 1)
+            df_tot.append(df_fold)
+        df_tot = concat(df_tot, axis=0, ignore_index=True)
 
-        pred_df = DataFrame()
-        pred_df['mode'] = [
-            'fold_' + str(i + 1) for i in range(self.__fold_num)
-        ] + ['ave']
-        pred_df['auc'] = [round(i['rocauc'], 2)
-                          for i in self.__fold_pred] + [round(ave_auc, 2)]
-        pred_df['r2'] = [round(i['score'], 2)
-                         for i in self.__fold_pred] + [round(ave_r2, 2)]
+        ave_keys = [c for c in df_tot.columns if c != 'mode']
+        ave_values = [round(mean(df_tot.loc[k].tolist()), 3) for k in ave_keys]
+        ave_dict = dict(zip(ave_keys, ave_values))
+        ave_dict['mode'] = 'ave'
 
-        pred_df.set_index('mode', drop=True)
-        DataFrame.to_csv(pred_df, save_path / 'pred_result.csv', index=False)
+        df_tot.append(ave_dict)
+        df_tot.set_index('mode', drop=True)
+        df_tot.to_csv(save_path / (save_name + '.csv'))

@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from matplotlib import pyplot as plt
+from sklearn.metrics import roc_curve
 from sklearn.impute import KNNImputer
 from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
@@ -60,5 +62,67 @@ class DataSetProcess(Basic):
 
 
 class OutcomeGenerate(Basic):
-    def __init__(self) -> None:
+    def __init__(self, perform: list, save_path: Path) -> None:
         super().__init__()
+        self.__perform = perform
+        self.__save_path = save_path
+
+    def __SaveGen(self, save_name: str, save_suffix: str):
+        self.__save_path.mkdir(parents=True, exist_ok=True)
+        save_path = self.__safe_path / '.'.join([save_name, save_suffix])
+        return save_path
+
+    def __DictToText(self, dict_: dict, l_gap: str = '\n', v_gap: str = ':\t'):
+        repr_gen = lambda dict_: (l_gap).join(
+            [v_gap.join([k, str(v)]) for k, v in dict_.items()])
+        return repr_gen(dict_)
+
+    def __PerformDict(self):
+        keys = []
+        perform = self.__perform
+        vals = perform.__dict__.values()
+        for i in perform.__dict__.keys():
+            if not type(perform).__name__ in i:
+                key_ = i
+            else:
+                key_ = i.split('_' + type(perform).__name__ + '__')[1]
+                if key_ in ['a_fpr', 'a_tpr', 'report']:
+                    continue
+            keys.append(key_)
+        perform_d = dict(zip(keys, vals))
+        return perform_d, perform.report
+
+    def TableGen(self, table_name: str = ''):
+        perform_d, _ = self.__PerformDict()
+        perform_df = pd.DataFrame(perform_d)
+        if not table_name:
+            return perform_df
+        else:
+            save_loc = self.__SaveGen(table_name, 'csv')
+            perform_df.to_csv(save_loc, index=False)
+            return
+
+    def TextGen(self, text_name: str) -> None:
+        perform_d, report_d = self.__PerformDict()
+        save_loc = self.__SaveGen(text_name, 'txt')
+        with open(save_loc, 'a') as f:
+            f.write(self.__DictToText(perform_d, v_gap=':\t'))
+            f.write(self.__DictToText(report_d, v_gap=':\n'))
+            f.write(':\n\n')
+
+    def RocPlot(self, fig_name: str, fig_dims: tuple = (6, 6)) -> None:
+        save_loc = self.__SaveGen(fig_name, 'png')
+        plt.subplots(figsize=fig_dims)
+        plt.title('Receiver operating characteristic')
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.plot([0, 1], [0, 1], 'r--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.plot(self.__perform.a_fpr,
+                 self.__perform.a_tpr,
+                 label='ROC AUC = {0}'.format(self.__perform.s_auc))
+        plt.legend(loc="lower right")
+        plt.tight_layout()
+        plt.savefig(save_loc)
+        plt.close()
