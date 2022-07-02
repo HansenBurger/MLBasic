@@ -107,7 +107,8 @@ class OutcomeGenerate(Basic):
         save_loc = self.__SaveGen(text_name, 'txt')
         with open(save_loc, 'a') as f:
             f.write(self.__DictToText(perform_d, v_gap=':\t'))
-            f.write(self.__DictToText(report_d, v_gap=':\n'))
+            f.write('Report: \n')
+            f.write(self.__DictToText(report_d, v_gap=':\t'))
             f.write(':\n\n')
 
     def RocPlot(self, fig_name: str, fig_dims: tuple = (6, 6)) -> None:

@@ -21,6 +21,7 @@ class KFoldMain(Basic):
         self.__data_sets = []
         self.__para_slts = []
         self.__pred_rsts = []
+        self.__feat_imps = []
 
     def __GetEvalSet(self, data_set):
         eval_set = [(data_set.X_train, data_set.y_train),
@@ -101,7 +102,7 @@ class KFoldMain(Basic):
                 }
                 para_deduce.update(para_deduce_add)
                 main_p.Deduce(para_deduce)
-                _ = main_p.GetFeatureImportance()
+                main_p.RebootByImpFeats()
 
                 para_deduce['eval_set'] = self.__GetEvalSet(main_p.dataset)
                 para_deduce['early_stopping_rounds'] = 50

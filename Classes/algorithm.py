@@ -84,8 +84,10 @@ class LogisiticReg(ModelBasic):
         self.DataInit(*data_)
         self.ModelInit(s_param)
 
-    def GetFeatureImportance(self) -> pd.Series:
-        attr_imp = pd.Series(self._ModelBasic__model.coef_[0])
+    def GetFeatureImp(self) -> pd.Series:
+        feat_name = self._ModelBasic__dataset.X_train.columns.tolist()
+        feat_imp = self._ModelBasic__model.coef_[0]
+        attr_imp = pd.Series(dict(zip(feat_name, feat_imp)))
         return attr_imp
 
 
@@ -95,9 +97,11 @@ class RandomForest(ModelBasic):
         self.DataInit(*data_)
         self.ModelInit(s_param)
 
-    def GetFeatureImportance(self) -> pd.Series:
-
-        pass
+    def GetFeatureImp(self) -> pd.Series:
+        feat_name = self._ModelBasic__dataset.X_train.columns.tolist()
+        feat_imp = self._ModelBasic__model.feature_importances_
+        attr_imp = pd.Series(dict(zip(feat_name, feat_imp)))
+        return attr_imp
 
 
 class SupportVector(ModelBasic):
@@ -106,9 +110,8 @@ class SupportVector(ModelBasic):
         self.DataInit(*data_)
         self.ModelInit(s_param)
 
-    def GetFeatureImportance(self) -> pd.Series:
-
-        pass
+    def GetFeatureImp(self) -> pd.Series:
+        return pd.Series([])
 
 
 class ParaSel_Grid(ModelBasic):
@@ -139,7 +142,13 @@ class XGBoosterClassify(ModelBasic):
         self.DataInit(*data_)
         self.ModelInit(s_param)
 
-    def GetFeatureImportance(self) -> pd.Series:
+    def GetFeatureImp(self) -> pd.Series:
+        feat_name = self._ModelBasic__dataset.X_train.columns.tolist()
+        feat_imp = self._ModelBasic__model.feature_importances_
+        attr_imp = pd.Series(dict(zip(feat_name, feat_imp)))
+        return attr_imp
+
+    def RebootByImpFeats(self) -> pd.Series:
         data_set = self._ModelBasic__dataset
         attr_imp = pd.Series(
             self._ModelBasic__model.get_booster().get_fscore())
@@ -150,5 +159,3 @@ class XGBoosterClassify(ModelBasic):
         else:
             self._ModelBasic__dataset.X_train = data_set.X_train[attr_select]
             self._ModelBasic__dataset.X_test = data_set.X_test[attr_select]
-
-        return attr_imp
