@@ -1,11 +1,12 @@
-from os import mkdir
+import sys
 from pathlib import Path
 from numpy import mean
 from pandas import concat
 from pandas import DataFrame
-from Classes.processing import DataSetProcess, OutcomeGenerate
-from Classes.balancing import BalanSMOTE, BalanRandOS
-from Classes.algorithm import ParaSel_Grid, ParaSel_Rand
+
+from MLBasic.Classes.processing import DataSetProcess, OutcomeGenerate
+from MLBasic.Classes.balancing import BalanSMOTE, BalanRandOS
+from MLBasic.Classes.algorithm import ParaSel_Grid, ParaSel_Rand
 
 
 class Basic():
@@ -83,9 +84,9 @@ class KFoldMain(Basic):
         '''
 
         for fold in range(self.__fold_num):
-            para_init = self.__fold_para[fold]
+            para_init = self.__para_slts[fold]
             para_init.update(para_init_add)
-            main_p = self.__algo_type(self.__fold_data[fold], para_init)
+            main_p = self.__algo_type(self.__data_sets[fold], para_init)
 
             if not re_select_feat:
                 para_deduce = {}
@@ -110,26 +111,34 @@ class KFoldMain(Basic):
                 main_p.Predict()
                 self.__pred_rsts.append(main_p.perform)
 
-    def ResultGenerate(self, save_path: Path):
+    def ResultGenerate(self,
+                       store_results: bool = True,
+                       save_path: Path = Path.cwd()):
         '''
         '''
         df_tot = []
-        save_name = 'pred_result'
-        save_path.mkdir(parents=True, mkdir=True)
+        if store_results:
+            save_name = 'pred_result'
+            save_path.mkdir(parents=True, exist_ok=True)
         for i in range(self.__fold_num):
             main_p = OutcomeGenerate(self.__pred_rsts[i], save_path)
-            main_p.TextGen(save_name)  # write into same file
-            main_p.RocPlot('{0}-Fold_ROC'.format(i + 1))
+            if store_results:
+                main_p.TextGen(save_name)  # write into same file
+                main_p.RocPlot('{0}-Fold_ROC'.format(i + 1))
             df_fold = main_p.TableGen()
             df_fold['mode'] = 'fold_' + str(i + 1)
             df_tot.append(df_fold)
         df_tot = concat(df_tot, axis=0, ignore_index=True)
 
         ave_keys = [c for c in df_tot.columns if c != 'mode']
-        ave_values = [round(mean(df_tot.loc[k].tolist()), 3) for k in ave_keys]
+        ave_values = [round(mean(df_tot[k].tolist()), 3) for k in ave_keys]
         ave_dict = dict(zip(ave_keys, ave_values))
         ave_dict['mode'] = 'ave'
 
-        df_tot.append(ave_dict)
-        df_tot.set_index('mode', drop=True)
-        df_tot.to_csv(save_path / (save_name + '.csv'))
+        df_tot = df_tot.append(ave_dict, ignore_index=True)
+        df_tot = df_tot.set_index('mode', drop=True)
+
+        if store_results:
+            df_tot.to_csv(save_path / (save_name + '.csv'))
+
+        return df_tot

@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.metrics import roc_auc_score, roc_curve, accuracy_score, classification_report, confusion_matrix
 
-from source_domain import DataSets, Predictions
+from MLBasic.Classes.source_domain import DataSets, Predictions
 
 warnings.filterwarnings('ignore')
 

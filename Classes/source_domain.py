@@ -58,7 +58,7 @@ class Predictions(Basic):
         self.__s_f_1 = -1.0
         self.__s_r_2 = -1.0
         self.__s_auc = -1.0
-        self.__reprot = {}
+        self.__report = {}
 
     @property
     def a_fpr(self):
@@ -126,8 +126,8 @@ class Predictions(Basic):
 
     @property
     def report(self):
-        return self.__reprot
+        return self.__report
 
     @report.setter
     def report(self, v: dict):
-        self.__reprot = v
+        self.__report = v

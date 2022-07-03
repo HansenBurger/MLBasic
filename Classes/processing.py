@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from matplotlib import pyplot as plt
-from sklearn.metrics import roc_curve
 from sklearn.impute import KNNImputer
 from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
@@ -40,7 +39,7 @@ class DataSetProcess(Basic):
             X, y, test_size=test_size_st, random_state=0, stratify=y)
         return X_train, y_train, X_test, y_test
 
-    def KFoldSplit(self, split_n: int, rand_n: int = 0):
+    def KFoldSplit(self, split_n: int, rand_n: int = None):
         data_l = []
         X, y = self.__GetXy()
         _, counts = np.unique(y, return_counts=True)
@@ -51,7 +50,7 @@ class DataSetProcess(Basic):
 
         kf = StratifiedKFold(n_splits=split_n,
                              random_state=rand_n,
-                             shuffle=True if rand_n > 0 else False)
+                             shuffle=True if not rand_n else False)
 
         for train_i, test_i in kf.split(X, y):
             X_train, y_train = X.iloc[train_i], y[train_i]
@@ -69,7 +68,7 @@ class OutcomeGenerate(Basic):
 
     def __SaveGen(self, save_name: str, save_suffix: str):
         self.__save_path.mkdir(parents=True, exist_ok=True)
-        save_path = self.__safe_path / '.'.join([save_name, save_suffix])
+        save_path = self.__save_path / '.'.join([save_name, save_suffix])
         return save_path
 
     def __DictToText(self, dict_: dict, l_gap: str = '\n', v_gap: str = ':\t'):
@@ -79,8 +78,8 @@ class OutcomeGenerate(Basic):
 
     def __PerformDict(self):
         keys = []
+        vals = []
         perform = self.__perform
-        vals = perform.__dict__.values()
         for i in perform.__dict__.keys():
             if not type(perform).__name__ in i:
                 key_ = i
@@ -88,12 +87,15 @@ class OutcomeGenerate(Basic):
                 key_ = i.split('_' + type(perform).__name__ + '__')[1]
                 if key_ in ['a_fpr', 'a_tpr', 'report']:
                     continue
+                val_ = getattr(perform, key_)
             keys.append(key_)
+            vals.append(val_)
         perform_d = dict(zip(keys, vals))
         return perform_d, perform.report
 
     def TableGen(self, table_name: str = ''):
         perform_d, _ = self.__PerformDict()
+        perform_d = [perform_d]
         perform_df = pd.DataFrame(perform_d)
         if not table_name:
             return perform_df
@@ -107,8 +109,7 @@ class OutcomeGenerate(Basic):
         save_loc = self.__SaveGen(text_name, 'txt')
         with open(save_loc, 'a') as f:
             f.write(self.__DictToText(perform_d, v_gap=':\t'))
-            f.write('Report: \n')
-            f.write(self.__DictToText(report_d, v_gap=':\t'))
+            f.write('\n Report: \n {0}'.format(report_d))
             f.write(':\n\n')
 
     def RocPlot(self, fig_name: str, fig_dims: tuple = (6, 6)) -> None:
