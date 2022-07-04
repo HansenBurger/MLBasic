@@ -75,7 +75,8 @@ class KFoldMain(Basic):
     def CrossValidate(self,
                       para_init_add: dict = {},
                       para_deduce_add: dict = {},
-                      re_select_feat: bool = False):
+                      re_select_feat: bool = False,
+                      get_feat_imp: bool = False):
         '''
         Cross-validation
         para_init_add: Model init s_param
@@ -91,9 +92,6 @@ class KFoldMain(Basic):
             if not re_select_feat:
                 para_deduce = {}
                 para_deduce.update(para_deduce_add)
-                main_p.Deduce(para_deduce)
-                main_p.Predict()
-                self.__pred_rsts.append(main_p.perform)
             else:
                 para_deduce = {
                     'eval_set': self.__GetEvalSet(main_p.dataset),
@@ -104,12 +102,14 @@ class KFoldMain(Basic):
                 para_deduce.update(para_deduce_add)
                 main_p.Deduce(para_deduce)
                 main_p.RebootByImpFeats()
-
                 para_deduce['eval_set'] = self.__GetEvalSet(main_p.dataset)
                 para_deduce['early_stopping_rounds'] = 50
-                main_p.Deduce(para_deduce)
-                main_p.Predict()
-                self.__pred_rsts.append(main_p.perform)
+
+            main_p.Deduce(para_deduce)
+            main_p.Predict()
+            if get_feat_imp:
+                main_p.GetFeatureImp()
+            self.__pred_rsts.append(main_p.perform)
 
     def ResultGenerate(self,
                        store_results: bool = True,
@@ -125,6 +125,7 @@ class KFoldMain(Basic):
             if store_results:
                 main_p.TextGen(save_name)  # write into same file
                 main_p.RocPlot('{0}-Fold_ROC'.format(i + 1))
+                main_p.FeatImpGen('{0}-Fold_Imp'.format(i + 1))
             df_fold = main_p.TableGen()
             df_fold['mode'] = 'fold_' + str(i + 1)
             df_tot.append(df_fold)

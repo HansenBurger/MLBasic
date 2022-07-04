@@ -88,7 +88,7 @@ class LogisiticReg(ModelBasic):
         feat_name = self._ModelBasic__dataset.X_train.columns.tolist()
         feat_imp = self._ModelBasic__model.coef_[0]
         attr_imp = pd.Series(dict(zip(feat_name, feat_imp)))
-        return attr_imp
+        self._ModelBasic__perform.ft_imp = attr_imp
 
 
 class RandomForest(ModelBasic):
@@ -101,7 +101,7 @@ class RandomForest(ModelBasic):
         feat_name = self._ModelBasic__dataset.X_train.columns.tolist()
         feat_imp = self._ModelBasic__model.feature_importances_
         attr_imp = pd.Series(dict(zip(feat_name, feat_imp)))
-        return attr_imp
+        self._ModelBasic__perform.ft_imp = attr_imp
 
 
 class SupportVector(ModelBasic):
@@ -111,7 +111,7 @@ class SupportVector(ModelBasic):
         self.ModelInit(s_param)
 
     def GetFeatureImp(self) -> pd.Series:
-        return pd.Series([])
+        self._ModelBasic__perform.ft_imp = pd.Series([])
 
 
 class ParaSel_Grid(ModelBasic):
@@ -146,7 +146,7 @@ class XGBoosterClassify(ModelBasic):
         feat_name = self._ModelBasic__dataset.X_train.columns.tolist()
         feat_imp = self._ModelBasic__model.feature_importances_
         attr_imp = pd.Series(dict(zip(feat_name, feat_imp)))
-        return attr_imp
+        self._ModelBasic__perform.ft_imp = attr_imp
 
     def RebootByImpFeats(self) -> pd.Series:
         data_set = self._ModelBasic__dataset

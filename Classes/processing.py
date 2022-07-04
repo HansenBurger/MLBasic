@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from pathlib import Path
 from matplotlib import pyplot as plt
 from sklearn.impute import KNNImputer
@@ -85,7 +86,7 @@ class OutcomeGenerate(Basic):
                 key_ = i
             else:
                 key_ = i.split('_' + type(perform).__name__ + '__')[1]
-                if key_ in ['a_fpr', 'a_tpr', 'report']:
+                if key_ in ['a_fpr', 'a_tpr', 'report', 'ft_imp']:
                     continue
                 val_ = getattr(perform, key_)
             keys.append(key_)
@@ -103,6 +104,21 @@ class OutcomeGenerate(Basic):
             save_loc = self.__SaveGen(table_name, 'csv')
             perform_df.to_csv(save_loc, index=False)
             return
+
+    def FeatImpGen(self, save_name: str = ''):
+        series_ = self.__perform.ft_imp
+        if not save_name or series_ == None or series_.empty:
+            return
+        else:
+            table_loc = self.__SaveGen(save_name, 'csv')
+            chart_loc = self.__SaveGen(save_name, 'png')
+            series_.to_csv(table_loc)
+            sns.reset_orig()
+            ax = sns.barplot(x=series_.values, y=series_.index, errwidth=0.1)
+            ax.bar_label(ax.containers[0])
+            plt.tight_layout()
+            plt.savefig(chart_loc)
+            plt.close()
 
     def TextGen(self, text_name: str) -> None:
         perform_d, report_d = self.__PerformDict()
