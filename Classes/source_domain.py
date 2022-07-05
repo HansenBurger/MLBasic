@@ -1,4 +1,5 @@
 import numpy as np
+from pandas import Series
 
 
 class Basic():
@@ -59,7 +60,7 @@ class Predictions(Basic):
         self.__s_r_2 = -1.0
         self.__s_auc = -1.0
         self.__report = {}
-        self.__ft_imp = None
+        self.__ft_imp = Series([])
 
     @property
     def a_fpr(self):

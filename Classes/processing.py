@@ -107,7 +107,7 @@ class OutcomeGenerate(Basic):
 
     def FeatImpGen(self, save_name: str = ''):
         series_ = self.__perform.ft_imp
-        if not save_name or series_ == None or series_.empty:
+        if not save_name or series_.empty:
             return
         else:
             table_loc = self.__SaveGen(save_name, 'csv')
