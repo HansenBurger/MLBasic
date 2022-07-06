@@ -103,7 +103,7 @@ class OutcomeGenerate(Basic):
         else:
             save_loc = self.__SaveGen(table_name, 'csv')
             perform_df.to_csv(save_loc, index=False)
-            return
+            return perform_df
 
     def FeatImpGen(self, save_name: str = ''):
         series_ = self.__perform.ft_imp
