@@ -120,6 +120,13 @@ class OutcomeGenerate(Basic):
             plt.savefig(chart_loc)
             plt.close()
 
+    def FprTprSave(self, save_name: str) -> None:
+        df = pd.DataFrame()
+        df['fpr'] = self.__perform.a_fpr
+        df['tpr'] = self.__perform.a_tpr
+        save_loc = self.__SaveGen(save_name, 'csv')
+        df.to_csv(save_loc, index=False)
+
     def TextGen(self, text_name: str) -> None:
         perform_d, report_d = self.__PerformDict()
         save_loc = self.__SaveGen(text_name, 'txt')

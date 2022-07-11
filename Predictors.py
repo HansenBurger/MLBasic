@@ -123,6 +123,7 @@ class NormPredictor(Basic):
             main_p.TextGen(save_name)  # write into same file
             main_p.RocPlot('ROC')
             main_p.FeatImpGen('Imp')
+            main_p.FprTprSave('FprTpr')
             df_ = main_p.TableGen('Info')
 
         return df_
@@ -239,6 +240,7 @@ class KFoldPredictor(Basic):
                 main_p.TextGen(save_name)  # write into same file
                 main_p.RocPlot('{0}-Fold_ROC'.format(i + 1))
                 main_p.FeatImpGen('{0}-Fold_Imp'.format(i + 1))
+                main_p.FprTprSave('{0}-Fold_FprTpr'.format(i + 1))
             df_fold = main_p.TableGen()
             df_fold['mode'] = 'fold_' + str(i + 1)
             df_tot.append(df_fold)
